@@ -473,8 +473,8 @@ export function DataTable({
     if (!data?.rows) return [];
     const result: FilteredRow[] = [];
     data.rows.forEach((row, originalIndex) => {
-      // Hardcoded Finca 20 filter - always applied
-      const fincaMatch = String(row[fincaColIdx]) === FINCA_FILTER;
+      // Hardcoded Finca 20 filter - always applied (case-insensitive)
+      const fincaMatch = isFinca20(String(row[fincaColIdx]));
       const dateMatch = selectedDates.size === 0 || selectedDates.has(String(row[dateColIdx]));
       const equipeMatch = !equipeFilter || String(row[equipeColIdx]) === equipeFilter;
       const motifMatch = !motifFilter || String(row[motifColIdx]) === motifFilter;
@@ -484,7 +484,7 @@ export function DataTable({
       }
     });
     return result;
-  }, [data?.rows, selectedDates, equipeFilter, motifFilter, nameSearch, dateColIdx, equipeColIdx, motifColIdx, nomPrenomColIdx, fincaColIdx, FINCA_FILTER]);
+  }, [data?.rows, selectedDates, equipeFilter, motifFilter, nameSearch, dateColIdx, equipeColIdx, motifColIdx, nomPrenomColIdx, fincaColIdx, isFinca20]);
 
   useEffect(() => {
     if (editingCell && inputRef.current) {
