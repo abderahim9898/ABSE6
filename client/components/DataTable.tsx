@@ -431,36 +431,42 @@ export function DataTable({
     return !readOnlyColIndices.has(colIdx);
   };
 
-  // Get unique values for filter dropdowns
+  // Get unique values for filter dropdowns (only from Finca 20 data)
   const uniqueDates = useMemo(() => {
     if (!data?.rows) return [];
     const dates = new Set<string>();
     data.rows.forEach(row => {
-      const cellValue = row[dateColIdx];
-      if (cellValue) dates.add(String(cellValue));
+      if (String(row[fincaColIdx]) === FINCA_FILTER) {
+        const cellValue = row[dateColIdx];
+        if (cellValue) dates.add(String(cellValue));
+      }
     });
     return Array.from(dates).sort();
-  }, [data?.rows, dateColIdx]);
+  }, [data?.rows, dateColIdx, fincaColIdx, FINCA_FILTER]);
 
   const uniqueEquipes = useMemo(() => {
     if (!data?.rows) return [];
     const equipes = new Set<string>();
     data.rows.forEach(row => {
-      const cellValue = row[equipeColIdx];
-      if (cellValue) equipes.add(String(cellValue));
+      if (String(row[fincaColIdx]) === FINCA_FILTER) {
+        const cellValue = row[equipeColIdx];
+        if (cellValue) equipes.add(String(cellValue));
+      }
     });
     return Array.from(equipes).sort();
-  }, [data?.rows, equipeColIdx]);
+  }, [data?.rows, equipeColIdx, fincaColIdx, FINCA_FILTER]);
 
   const uniqueMotifs = useMemo(() => {
     if (!data?.rows) return [];
     const motifs = new Set<string>();
     data.rows.forEach(row => {
-      const cellValue = row[motifColIdx];
-      if (cellValue) motifs.add(String(cellValue));
+      if (String(row[fincaColIdx]) === FINCA_FILTER) {
+        const cellValue = row[motifColIdx];
+        if (cellValue) motifs.add(String(cellValue));
+      }
     });
     return Array.from(motifs).sort();
-  }, [data?.rows, motifColIdx]);
+  }, [data?.rows, motifColIdx, fincaColIdx, FINCA_FILTER]);
 
   // Filter rows based on filter values, tracking original indices
   const filteredRows = useMemo(() => {
