@@ -390,6 +390,7 @@ export function DataTable({
   const [selectedDates, setSelectedDates] = useState<Set<string>>(new Set());
   const [equipeFilter, setEquipeFilter] = useState("");
   const [motifFilter, setMotifFilter] = useState("");
+  const [nameSearch, setNameSearch] = useState("");
 
   // Find column indices for Date, Equipe, and Motif d'absence
   const dateColIdx = useMemo(() => {
@@ -466,12 +467,13 @@ export function DataTable({
       const dateMatch = selectedDates.size === 0 || selectedDates.has(String(row[dateColIdx]));
       const equipeMatch = !equipeFilter || String(row[equipeColIdx]) === equipeFilter;
       const motifMatch = !motifFilter || String(row[motifColIdx]) === motifFilter;
-      if (dateMatch && equipeMatch && motifMatch) {
+      const nameMatch = !nameSearch || String(row[nomPrenomColIdx]).toLowerCase().includes(nameSearch.toLowerCase());
+      if (dateMatch && equipeMatch && motifMatch && nameMatch) {
         result.push({ row, originalIndex });
       }
     });
     return result;
-  }, [data?.rows, selectedDates, equipeFilter, motifFilter, dateColIdx, equipeColIdx, motifColIdx]);
+  }, [data?.rows, selectedDates, equipeFilter, motifFilter, nameSearch, dateColIdx, equipeColIdx, motifColIdx, nomPrenomColIdx]);
 
   useEffect(() => {
     if (editingCell && inputRef.current) {
@@ -799,7 +801,19 @@ export function DataTable({
           <div className="mb-3">
             <h2 className="text-sm font-semibold text-gray-700 mb-3">Filters</h2>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+            {/* Name Search */}
+            <div className="flex flex-col gap-2">
+              <label className="text-xs font-medium text-gray-600">Name</label>
+              <input
+                type="text"
+                placeholder="Search by name..."
+                value={nameSearch}
+                onChange={(e) => setNameSearch(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+
             {/* Date Filter */}
             <DateFilterCombobox
               label="Date"
@@ -830,13 +844,14 @@ export function DataTable({
           </div>
 
           {/* Clear Filters Button */}
-          {(selectedDates.size > 0 || equipeFilter || motifFilter) && (
+          {(selectedDates.size > 0 || equipeFilter || motifFilter || nameSearch) && (
             <div className="mt-3 flex justify-end">
               <Button
                 onClick={() => {
                   setSelectedDates(new Set());
                   setEquipeFilter("");
                   setMotifFilter("");
+                  setNameSearch("");
                 }}
                 variant="outline"
                 size="sm"
