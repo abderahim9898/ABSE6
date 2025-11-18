@@ -392,8 +392,8 @@ export function DataTable({
   const [motifFilter, setMotifFilter] = useState("");
   const [nameSearch, setNameSearch] = useState("");
 
-  // Hardcoded Finca filter - only show Finca 20
-  const FINCA_FILTER = "Finca 20";
+  // Hardcoded Finca filter - only show Finca 20 (case-insensitive)
+  const isFinca20 = (value: string) => value.toUpperCase() === "FINCA 20";
 
   // Find column indices for Date, Equipe, and Motif d'absence
   const dateColIdx = useMemo(() => {
