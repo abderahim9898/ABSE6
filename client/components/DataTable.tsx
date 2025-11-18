@@ -864,6 +864,9 @@ export function DataTable({
                 <X size={14} />
                 Clear Filters
               </Button>
+              <p className="text-xs text-gray-500 ml-3 my-auto">
+                (Note: Finca 20 filter is always applied)
+              </p>
             </div>
           )}
         </div>
