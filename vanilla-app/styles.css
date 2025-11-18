@@ -731,6 +731,42 @@ body {
     }
 }
 
+/* Statistics Styles */
+.stats-section {
+    margin-bottom: var(--spacing-6);
+}
+
+.stats-section h3 {
+    font-weight: 600;
+    color: var(--color-gray-700);
+    margin-bottom: var(--spacing-3);
+    padding-bottom: var(--spacing-2);
+    border-bottom: 2px solid var(--color-gray-200);
+}
+
+.stat-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-3) var(--spacing-4);
+    background: var(--color-gray-50);
+    border-radius: var(--radius-sm);
+    margin-bottom: var(--spacing-2);
+}
+
+.stat-item span {
+    color: var(--color-gray-700);
+    font-weight: 500;
+}
+
+.stat-item strong {
+    background: var(--color-primary);
+    color: white;
+    padding: var(--spacing-1) var(--spacing-3);
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .app-container {
