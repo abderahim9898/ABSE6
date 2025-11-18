@@ -467,16 +467,18 @@ export function DataTable({
     if (!data?.rows) return [];
     const result: FilteredRow[] = [];
     data.rows.forEach((row, originalIndex) => {
+      // Hardcoded Finca 20 filter - always applied
+      const fincaMatch = String(row[fincaColIdx]) === FINCA_FILTER;
       const dateMatch = selectedDates.size === 0 || selectedDates.has(String(row[dateColIdx]));
       const equipeMatch = !equipeFilter || String(row[equipeColIdx]) === equipeFilter;
       const motifMatch = !motifFilter || String(row[motifColIdx]) === motifFilter;
       const nameMatch = !nameSearch || String(row[nomPrenomColIdx]).toLowerCase().includes(nameSearch.toLowerCase());
-      if (dateMatch && equipeMatch && motifMatch && nameMatch) {
+      if (fincaMatch && dateMatch && equipeMatch && motifMatch && nameMatch) {
         result.push({ row, originalIndex });
       }
     });
     return result;
-  }, [data?.rows, selectedDates, equipeFilter, motifFilter, nameSearch, dateColIdx, equipeColIdx, motifColIdx, nomPrenomColIdx]);
+  }, [data?.rows, selectedDates, equipeFilter, motifFilter, nameSearch, dateColIdx, equipeColIdx, motifColIdx, nomPrenomColIdx, fincaColIdx, FINCA_FILTER]);
 
   useEffect(() => {
     if (editingCell && inputRef.current) {
