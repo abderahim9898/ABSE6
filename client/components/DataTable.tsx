@@ -715,7 +715,6 @@ export function DataTable({
             <div className="flex items-center gap-4 mb-2">
               <h1 className="text-3xl font-bold text-gray-900">{sheetName}</h1>
             </div>
-            <p className="text-gray-600">Edit cells inline to update your data</p>
           </div>
 
           <Button
