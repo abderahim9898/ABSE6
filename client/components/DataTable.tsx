@@ -80,9 +80,14 @@ function DateFilterCombobox({ label, placeholder, options, selectedDates, onChan
       .reduce((acc, [key, dates]) => {
         const monthName = new Date(parseInt(key.split("/")[1]), parseInt(key.split("/")[0]) - 1).toLocaleString(language === 'fr' ? 'fr-FR' : 'en-US', { month: 'long', year: 'numeric' });
         acc[monthName] = dates.sort((a, b) => {
-          const aDate = new Date(a);
-          const bDate = new Date(b);
-          return bDate.getTime() - aDate.getTime();
+          try {
+            const aDate = parseISO(String(a));
+            const bDate = parseISO(String(b));
+            return compareDesc(aDate, bDate);
+          } catch {
+            // Fallback to string comparison if dates can't be parsed
+            return String(b).localeCompare(String(a));
+          }
         });
         return acc;
       }, {} as Record<string, string[]>);
