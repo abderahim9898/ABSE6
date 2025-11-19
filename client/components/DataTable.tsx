@@ -90,7 +90,10 @@ function DateFilterCombobox({ label, placeholder, options, selectedDates, onChan
     return Object.entries(groups)
       .sort((a, b) => b[0].localeCompare(a[0]))
       .reduce((acc, [key, dates]) => {
-        const monthName = new Date(parseInt(key.split("/")[1]), parseInt(key.split("/")[0]) - 1).toLocaleString(language === 'fr' ? 'fr-FR' : 'en-US', { month: 'long', year: 'numeric' });
+        const [month, year] = key.split("/");
+        const date = new Date(parseInt(year), parseInt(month) - 1, 15);
+        const locale = language === 'fr' ? fr : enUS;
+        const monthName = format(date, 'MMMM yyyy', { locale });
         acc[monthName] = dates.sort((a, b) => {
           try {
             const aDate = parseISO(String(a));
