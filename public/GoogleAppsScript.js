@@ -202,16 +202,17 @@ function doOptions(e) {
 /**
  * Retrieve all data from the sheet
  * The first row is treated as headers, subsequent rows are data
+ * Converts Date objects to ISO 8601 format (YYYY-MM-DDTHH:mm:ss.sssZ)
  * @returns {Object} Object containing headers array and rows array
  */
 function getData() {
   try {
     const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
-    
+
     if (!ss) {
       throw new Error("Spreadsheet not found. Check SPREADSHEET_ID is correct.");
     }
-    
+
     const sheet = ss.getSheetByName(SHEET_NAME);
 
     if (!sheet) {
@@ -226,7 +227,17 @@ function getData() {
 
     if (values && values.length > 0) {
       headers = values[0];
-      rows = values.slice(1);
+      // Convert rows, handling Date objects properly
+      rows = values.slice(1).map(row => {
+        return row.map(cell => {
+          // Convert JavaScript Date objects to ISO 8601 format
+          if (cell instanceof Date && !isNaN(cell.getTime())) {
+            // Return ISO string: YYYY-MM-DDTHH:mm:ss.sssZ
+            return cell.toISOString();
+          }
+          return cell;
+        });
+      });
     }
 
     console.log("getData() called. Headers: " + headers.length + ", Rows: " + rows.length);
