@@ -1,5 +1,6 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
+import { parseISO, format } from "date-fns";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -15,22 +16,25 @@ export function formatDate(value: any): string {
     return dateStr;
   }
 
-  // Check if it looks like an ISO date (YYYY-MM-DD or YYYY-MM-DDTHH:mm:ss)
-  const isoDateRegex = /^\d{4}-\d{2}-\d{2}(T|[ ])/;
-  if (isoDateRegex.test(dateStr)) {
+  // Check if it looks like an ISO date (YYYY-MM-DD or YYYY-MM-DDTHH:mm:ss.sssZ)
+  const isoDateRegex = /^(\d{4})-(\d{2})-(\d{2})(T|[ ])/;
+  const isoMatch = dateStr.match(isoDateRegex);
+
+  if (isoMatch) {
     try {
-      const date = new Date(dateStr);
+      // Extract just the date part (YYYY-MM-DD) without timezone
+      const [, year, month, day] = isoMatch;
+
+      // Create date using UTC to avoid timezone conversion
+      const date = new Date(Date.UTC(parseInt(year), parseInt(month) - 1, parseInt(day)));
 
       // Check if date is valid
       if (isNaN(date.getTime())) {
         return dateStr;
       }
 
-      const day = String(date.getDate()).padStart(2, "0");
-      const month = String(date.getMonth() + 1).padStart(2, "0");
-      const year = date.getFullYear();
-
-      return `${day}/${month}/${year}`;
+      // Format as DD/MM/YYYY
+      return format(date, "dd/MM/yyyy", { useAdditionalWeekYearTokens: true });
     } catch {
       return dateStr;
     }

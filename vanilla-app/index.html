@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ABSENCES Management</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Toast Container -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- Main App -->
+    <div id="app" class="app-container">
+        <!-- Header -->
+        <div class="header">
+            <div class="header-content">
+                <div class="header-left">
+                    <h1 id="page-title">ABSENCES</h1>
+                </div>
+                <div class="header-actions">
+                    <button id="refresh-btn" class="btn btn-outline" title="Refresh data">
+                        <span class="icon">↻</span>
+                        <span id="refresh-label">Refresh</span>
+                    </button>
+                    <button id="stats-btn" class="btn btn-outline" title="Show statistics">
+                        <span class="icon">📊</span>
+                        <span id="stats-label">Statistics</span>
+                    </button>
+                    <button id="notify-btn" class="btn btn-success" title="Send notification">
+                        <span class="icon">📅</span>
+                        <span id="notify-label">Mark Complete</span>
+                    </button>
+                    <button id="lang-btn" class="btn btn-outline" title="Toggle language">
+                        <span id="lang-label">FR</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Notification Date Picker Modal -->
+        <div id="notify-modal" class="modal hidden">
+            <div class="modal-content">
+                <h2 id="notify-title">Select Completion Date</h2>
+                <div class="modal-body">
+                    <input type="date" id="completion-date" class="input-field">
+                </div>
+                <div class="modal-footer">
+                    <button id="notify-confirm-btn" class="btn btn-success">Send to Telegram</button>
+                    <button id="notify-cancel-btn" class="btn btn-outline">Cancel</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics Modal -->
+        <div id="stats-modal" class="modal hidden">
+            <div class="modal-content modal-large">
+                <div class="modal-header">
+                    <h2 id="stats-title">Statistics</h2>
+                    <button id="stats-close-btn" class="btn btn-icon">✕</button>
+                </div>
+                <div class="modal-body">
+                    <div id="stats-content">
+                        <div class="loading-spinner">Loading...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="filters-panel">
+            <h3 id="filters-title">Filters</h3>
+            <div class="filters-grid">
+                <!-- Name Filter -->
+                <div class="filter-group">
+                    <label id="name-label">Name</label>
+                    <input type="text" id="name-filter" class="input-field" placeholder="Search by name...">
+                </div>
+
+                <!-- Date Filter -->
+                <div class="filter-group">
+                    <label id="date-label">Date</label>
+                    <button id="date-filter-btn" class="btn btn-outline w-full">All dates</button>
+                    <div id="date-filter-dropdown" class="dropdown-menu hidden">
+                        <input type="text" id="date-search" class="input-field" placeholder="Search dates...">
+                        <div id="date-options" class="options-list"></div>
+                    </div>
+                </div>
+
+                <!-- Equipe Filter -->
+                <div class="filter-group">
+                    <label id="equipe-label">Equipe</label>
+                    <button id="equipe-filter-btn" class="btn btn-outline w-full">All equipes</button>
+                    <div id="equipe-filter-dropdown" class="dropdown-menu hidden">
+                        <input type="text" id="equipe-search" class="input-field" placeholder="Search equipes...">
+                        <div id="equipe-options" class="options-list"></div>
+                    </div>
+                </div>
+
+                <!-- Motif Filter -->
+                <div class="filter-group">
+                    <label id="motif-label">Motif d'absence</label>
+                    <button id="motif-filter-btn" class="btn btn-outline w-full">All motifs</button>
+                    <div id="motif-filter-dropdown" class="dropdown-menu hidden">
+                        <input type="text" id="motif-search" class="input-field" placeholder="Search motifs...">
+                        <div id="motif-options" class="options-list"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Clear Filters -->
+            <div id="clear-filters-container" class="clear-filters hidden">
+                <button id="clear-filters-btn" class="btn btn-outline">Clear Filters</button>
+            </div>
+        </div>
+
+        <!-- Bulk Edit Panel -->
+        <div id="bulk-panel" class="bulk-panel hidden">
+            <div class="bulk-header">
+                <div class="bulk-info">
+                    <h3 id="bulk-count"></h3>
+                    <p id="bulk-status"></p>
+                </div>
+                <div class="bulk-actions">
+                    <button id="bulk-select-all-btn" class="btn btn-outline">Select All</button>
+                    <button id="bulk-clear-btn" class="btn btn-outline">Clear</button>
+                    <button id="bulk-confirm-btn" class="btn btn-success hidden">Confirm</button>
+                    <button id="bulk-cancel-btn" class="btn btn-outline hidden">Cancel</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Error Message -->
+        <div id="error-container" class="error-message hidden">
+            <div class="error-icon">⚠️</div>
+            <div>
+                <h3>Error Loading Data</h3>
+                <p id="error-text"></p>
+            </div>
+        </div>
+
+        <!-- Data Table -->
+        <div id="table-container" class="table-container hidden">
+            <div class="table-wrapper">
+                <table id="data-table" class="data-table">
+                    <thead id="table-head">
+                        <tr></tr>
+                    </thead>
+                    <tbody id="table-body"></tbody>
+                </table>
+            </div>
+            <div class="table-footer">
+                <span id="row-count">Showing 0 rows</span>
+                <span id="updating-status" class="hidden">Saving changes...</span>
+            </div>
+        </div>
+
+        <!-- No Results Message -->
+        <div id="no-results" class="message-box hidden">
+            <p id="no-results-text">No rows match the current filters</p>
+            <button id="no-results-clear-btn" class="btn btn-outline">Clear Filters</button>
+        </div>
+
+        <!-- Loading Spinner -->
+        <div id="loading" class="loading-container hidden">
+            <div class="loading-spinner">Loading sheet data...</div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
