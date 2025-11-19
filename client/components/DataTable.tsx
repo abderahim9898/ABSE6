@@ -67,12 +67,23 @@ function DateFilterCombobox({ label, placeholder, options, selectedDates, onChan
       const parts = formatted.split("/");
       if (parts.length === 3) {
         const monthYear = `${parts[1]}/${parts[2]}`;
-        const monthName = new Date(parseInt(parts[2]), parseInt(parts[1]) - 1).toLocaleString(language === 'fr' ? 'fr-FR' : 'en-US', { month: 'long', year: 'numeric' });
+        try {
+          // Create a date in the middle of the month to avoid timezone issues
+          const date = new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, 15);
+          const locale = language === 'fr' ? fr : enUS;
+          const monthName = format(date, 'MMMM yyyy', { locale });
 
-        if (!groups[monthYear]) {
-          groups[monthYear] = [];
+          if (!groups[monthYear]) {
+            groups[monthYear] = [];
+          }
+          groups[monthYear].push(dateStr);
+        } catch {
+          // Fallback if parsing fails
+          if (!groups[monthYear]) {
+            groups[monthYear] = [];
+          }
+          groups[monthYear].push(dateStr);
         }
-        groups[monthYear].push(dateStr);
       }
     });
 
