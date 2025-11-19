@@ -96,9 +96,19 @@ function DateFilterCombobox({ label, placeholder, options, selectedDates, onChan
         const monthName = format(date, 'MMMM yyyy', { locale });
         acc[monthName] = dates.sort((a, b) => {
           try {
-            const aDate = parseISO(String(a));
-            const bDate = parseISO(String(b));
-            return compareDesc(aDate, bDate);
+            // Extract just the date part (YYYY-MM-DD) from ISO strings to avoid timezone shifts
+            const aStr = String(a);
+            const bStr = String(b);
+            const aDateMatch = aStr.match(/^(\d{4})-(\d{2})-(\d{2})/);
+            const bDateMatch = bStr.match(/^(\d{4})-(\d{2})-(\d{2})/);
+
+            if (aDateMatch && bDateMatch) {
+              const aDate = new Date(Date.UTC(parseInt(aDateMatch[1]), parseInt(aDateMatch[2]) - 1, parseInt(aDateMatch[3])));
+              const bDate = new Date(Date.UTC(parseInt(bDateMatch[1]), parseInt(bDateMatch[2]) - 1, parseInt(bDateMatch[3])));
+              return compareDesc(aDate, bDate);
+            }
+            // Fallback to string comparison
+            return String(b).localeCompare(String(a));
           } catch {
             // Fallback to string comparison if dates can't be parsed
             return String(b).localeCompare(String(a));
