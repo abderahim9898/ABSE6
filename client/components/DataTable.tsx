@@ -20,6 +20,8 @@ import { AlertCircle, Loader, RefreshCw, ChevronLeft, X, ChevronsUpDown, Check, 
 import { StatisticsModal } from "@/components/StatisticsModal";
 import { useLanguage } from "@/hooks/useLanguage";
 import { t, Language } from "@/lib/translations";
+import { parseISO, compareDesc, format } from "date-fns";
+import { enUS, fr } from "date-fns/locale";
 
 interface DataTableProps {
   scriptUrl: string;
@@ -65,23 +67,52 @@ function DateFilterCombobox({ label, placeholder, options, selectedDates, onChan
       const parts = formatted.split("/");
       if (parts.length === 3) {
         const monthYear = `${parts[1]}/${parts[2]}`;
-        const monthName = new Date(parseInt(parts[2]), parseInt(parts[1]) - 1).toLocaleString(language === 'fr' ? 'fr-FR' : 'en-US', { month: 'long', year: 'numeric' });
+        try {
+          // Create a date in the middle of the month to avoid timezone issues
+          const date = new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, 15);
+          const locale = language === 'fr' ? fr : enUS;
+          const monthName = format(date, 'MMMM yyyy', { locale });
 
-        if (!groups[monthYear]) {
-          groups[monthYear] = [];
+          if (!groups[monthYear]) {
+            groups[monthYear] = [];
+          }
+          groups[monthYear].push(dateStr);
+        } catch {
+          // Fallback if parsing fails
+          if (!groups[monthYear]) {
+            groups[monthYear] = [];
+          }
+          groups[monthYear].push(dateStr);
         }
-        groups[monthYear].push(dateStr);
       }
     });
 
     return Object.entries(groups)
       .sort((a, b) => b[0].localeCompare(a[0]))
       .reduce((acc, [key, dates]) => {
-        const monthName = new Date(parseInt(key.split("/")[1]), parseInt(key.split("/")[0]) - 1).toLocaleString(language === 'fr' ? 'fr-FR' : 'en-US', { month: 'long', year: 'numeric' });
+        const [month, year] = key.split("/");
+        const date = new Date(parseInt(year), parseInt(month) - 1, 15);
+        const locale = language === 'fr' ? fr : enUS;
+        const monthName = format(date, 'MMMM yyyy', { locale });
         acc[monthName] = dates.sort((a, b) => {
-          const aDate = new Date(a);
-          const bDate = new Date(b);
-          return bDate.getTime() - aDate.getTime();
+          try {
+            // Extract just the date part (YYYY-MM-DD) from ISO strings to avoid timezone shifts
+            const aStr = String(a);
+            const bStr = String(b);
+            const aDateMatch = aStr.match(/^(\d{4})-(\d{2})-(\d{2})/);
+            const bDateMatch = bStr.match(/^(\d{4})-(\d{2})-(\d{2})/);
+
+            if (aDateMatch && bDateMatch) {
+              const aDate = new Date(Date.UTC(parseInt(aDateMatch[1]), parseInt(aDateMatch[2]) - 1, parseInt(aDateMatch[3])));
+              const bDate = new Date(Date.UTC(parseInt(bDateMatch[1]), parseInt(bDateMatch[2]) - 1, parseInt(bDateMatch[3])));
+              return compareDesc(aDate, bDate);
+            }
+            // Fallback to string comparison
+            return String(b).localeCompare(String(a));
+          } catch {
+            // Fallback to string comparison if dates can't be parsed
+            return String(b).localeCompare(String(a));
+          }
         });
         return acc;
       }, {} as Record<string, string[]>);
@@ -390,6 +421,10 @@ export function DataTable({
   const [selectedDates, setSelectedDates] = useState<Set<string>>(new Set());
   const [equipeFilter, setEquipeFilter] = useState("");
   const [motifFilter, setMotifFilter] = useState("");
+  const [nameSearch, setNameSearch] = useState("");
+
+  // Hardcoded Finca filter - only show Finca 20 (case-insensitive)
+  const isFinca20 = (value: string) => value.toUpperCase() === "FINCA 20";
 
   // Find column indices for Date, Equipe, and Motif d'absence
   const dateColIdx = useMemo(() => {
@@ -427,51 +462,60 @@ export function DataTable({
     return !readOnlyColIndices.has(colIdx);
   };
 
-  // Get unique values for filter dropdowns
+  // Get unique values for filter dropdowns (only from Finca 20 data, case-insensitive)
   const uniqueDates = useMemo(() => {
     if (!data?.rows) return [];
     const dates = new Set<string>();
     data.rows.forEach(row => {
-      const cellValue = row[dateColIdx];
-      if (cellValue) dates.add(String(cellValue));
+      if (isFinca20(String(row[fincaColIdx]))) {
+        const cellValue = row[dateColIdx];
+        if (cellValue) dates.add(String(cellValue));
+      }
     });
     return Array.from(dates).sort();
-  }, [data?.rows, dateColIdx]);
+  }, [data?.rows, dateColIdx, fincaColIdx, isFinca20]);
 
   const uniqueEquipes = useMemo(() => {
     if (!data?.rows) return [];
     const equipes = new Set<string>();
     data.rows.forEach(row => {
-      const cellValue = row[equipeColIdx];
-      if (cellValue) equipes.add(String(cellValue));
+      if (isFinca20(String(row[fincaColIdx]))) {
+        const cellValue = row[equipeColIdx];
+        if (cellValue) equipes.add(String(cellValue));
+      }
     });
     return Array.from(equipes).sort();
-  }, [data?.rows, equipeColIdx]);
+  }, [data?.rows, equipeColIdx, fincaColIdx, isFinca20]);
 
   const uniqueMotifs = useMemo(() => {
     if (!data?.rows) return [];
     const motifs = new Set<string>();
     data.rows.forEach(row => {
-      const cellValue = row[motifColIdx];
-      if (cellValue) motifs.add(String(cellValue));
+      if (isFinca20(String(row[fincaColIdx]))) {
+        const cellValue = row[motifColIdx];
+        if (cellValue) motifs.add(String(cellValue));
+      }
     });
     return Array.from(motifs).sort();
-  }, [data?.rows, motifColIdx]);
+  }, [data?.rows, motifColIdx, fincaColIdx, isFinca20]);
 
   // Filter rows based on filter values, tracking original indices
   const filteredRows = useMemo(() => {
     if (!data?.rows) return [];
     const result: FilteredRow[] = [];
     data.rows.forEach((row, originalIndex) => {
+      // Hardcoded Finca 20 filter - always applied (case-insensitive)
+      const fincaMatch = isFinca20(String(row[fincaColIdx]));
       const dateMatch = selectedDates.size === 0 || selectedDates.has(String(row[dateColIdx]));
       const equipeMatch = !equipeFilter || String(row[equipeColIdx]) === equipeFilter;
       const motifMatch = !motifFilter || String(row[motifColIdx]) === motifFilter;
-      if (dateMatch && equipeMatch && motifMatch) {
+      const nameMatch = !nameSearch || String(row[nomPrenomColIdx]).toLowerCase().includes(nameSearch.toLowerCase());
+      if (fincaMatch && dateMatch && equipeMatch && motifMatch && nameMatch) {
         result.push({ row, originalIndex });
       }
     });
     return result;
-  }, [data?.rows, selectedDates, equipeFilter, motifFilter, dateColIdx, equipeColIdx, motifColIdx]);
+  }, [data?.rows, selectedDates, equipeFilter, motifFilter, nameSearch, dateColIdx, equipeColIdx, motifColIdx, nomPrenomColIdx, fincaColIdx, isFinca20]);
 
   useEffect(() => {
     if (editingCell && inputRef.current) {
@@ -713,7 +757,6 @@ export function DataTable({
             <div className="flex items-center gap-4 mb-2">
               <h1 className="text-3xl font-bold text-gray-900">{sheetName}</h1>
             </div>
-            <p className="text-gray-600">Edit cells inline to update your data</p>
           </div>
 
           <Button
@@ -799,7 +842,19 @@ export function DataTable({
           <div className="mb-3">
             <h2 className="text-sm font-semibold text-gray-700 mb-3">Filters</h2>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+            {/* Name Search */}
+            <div className="flex flex-col gap-2">
+              <label className="text-xs font-medium text-gray-600">Name</label>
+              <input
+                type="text"
+                placeholder="Search by name..."
+                value={nameSearch}
+                onChange={(e) => setNameSearch(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+
             {/* Date Filter */}
             <DateFilterCombobox
               label="Date"
@@ -830,13 +885,14 @@ export function DataTable({
           </div>
 
           {/* Clear Filters Button */}
-          {(selectedDates.size > 0 || equipeFilter || motifFilter) && (
+          {(selectedDates.size > 0 || equipeFilter || motifFilter || nameSearch) && (
             <div className="mt-3 flex justify-end">
               <Button
                 onClick={() => {
                   setSelectedDates(new Set());
                   setEquipeFilter("");
                   setMotifFilter("");
+                  setNameSearch("");
                 }}
                 variant="outline"
                 size="sm"
@@ -845,6 +901,9 @@ export function DataTable({
                 <X size={14} />
                 Clear Filters
               </Button>
+              <p className="text-xs text-gray-500 ml-3 my-auto">
+                (Note: Finca 20 filter is always applied)
+              </p>
             </div>
           )}
         </div>
