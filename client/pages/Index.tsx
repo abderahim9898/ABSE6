@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { DataTable } from "@/components/DataTable";
 
 // Hardcoded Google Apps Script URL
-const GOOGLE_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzSH0UGd5pTbkCz59HeqarYsEajxybWtHJYB5EJ8-C0JwDD3DmhROd4sVoGuqU5QeomjQ/exec";
+const GOOGLE_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz8Tmz2pm6M1-_g-MDfxZOVRRXPjhJxHWJgik1NNeWy-A0Gm1Dkuv4uE-gwqyM0BQoiEA/exec";
 const SHEET_NAME = "ABSENCES";
 
 export default function Index() {
