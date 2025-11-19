@@ -17,11 +17,16 @@ export function formatDate(value: any): string {
   }
 
   // Check if it looks like an ISO date (YYYY-MM-DD or YYYY-MM-DDTHH:mm:ss.sssZ)
-  const isoDateRegex = /^\d{4}-\d{2}-\d{2}(T|[ ])/;
-  if (isoDateRegex.test(dateStr)) {
+  const isoDateRegex = /^(\d{4})-(\d{2})-(\d{2})(T|[ ])/;
+  const isoMatch = dateStr.match(isoDateRegex);
+
+  if (isoMatch) {
     try {
-      // Use date-fns parseISO to properly handle ISO dates with timezone
-      const date = parseISO(dateStr);
+      // Extract just the date part (YYYY-MM-DD) without timezone
+      const [, year, month, day] = isoMatch;
+
+      // Create date using UTC to avoid timezone conversion
+      const date = new Date(Date.UTC(parseInt(year), parseInt(month) - 1, parseInt(day)));
 
       // Check if date is valid
       if (isNaN(date.getTime())) {
@@ -29,7 +34,7 @@ export function formatDate(value: any): string {
       }
 
       // Format as DD/MM/YYYY
-      return format(date, "dd/MM/yyyy");
+      return format(date, "dd/MM/yyyy", { useAdditionalWeekYearTokens: true });
     } catch {
       return dateStr;
     }
