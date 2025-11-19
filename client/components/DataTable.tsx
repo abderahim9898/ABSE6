@@ -20,7 +20,8 @@ import { AlertCircle, Loader, RefreshCw, ChevronLeft, X, ChevronsUpDown, Check, 
 import { StatisticsModal } from "@/components/StatisticsModal";
 import { useLanguage } from "@/hooks/useLanguage";
 import { t, Language } from "@/lib/translations";
-import { parseISO, compareDesc } from "date-fns";
+import { parseISO, compareDesc, format } from "date-fns";
+import { enUS, fr } from "date-fns/locale";
 
 interface DataTableProps {
   scriptUrl: string;
